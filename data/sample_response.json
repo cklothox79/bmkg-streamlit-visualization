@@ -1,0 +1,7 @@
+{
+"lokasi": {"provinsi":"DKI Jakarta","kota":"Jakarta Selatan","kecamatan":"Kebayoran Baru","kode":"31.71.03.1001"},
+"data": [
+{"jamCuaca":"2025-09-25T13:00:00+07:00","cuaca":"Cerah Berawan","tempC":31,"humidity":70,"windSpeed":15,"latitude":-6.234,"longitude":106.800},
+{"jamCuaca":"2025-09-25T14:00:00+07:00","cuaca":"Hujan","tempC":30,"humidity":75,"windSpeed":12,"latitude":-6.234,"longitude":106.800}
+]
+}
