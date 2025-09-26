@@ -1,50 +1,46 @@
 import streamlit as st
 import pandas as pd
-from utils.api import get_prakiraan
-from utils.visuals import plot_time_series, make_map
+from utils.isdp_api import get_wilayah, get_forecast
 
+st.set_page_config(page_title="BMKG – Prakiraan Cuaca ISDP", layout="wide")
+st.title("🌦️ Prakiraan Cuaca BMKG (API ISDP)")
 
-st.set_page_config(page_title="BMKG Visualizer", layout="wide")
+st.sidebar.header("Pilih Wilayah")
 
+# --- Input kode wilayah ---
+prov_code = st.sidebar.text_input("Kode Provinsi (adm1)", "35")  # contoh Jawa Timur
+kab_code  = st.sidebar.text_input("Kode Kabupaten/Kota (adm2)", "")
+kec_code  = st.sidebar.text_input("Kode Kecamatan (adm3)", "")
+kel_code  = st.sidebar.text_input("Kode Kelurahan (adm4)", "")
 
-st.title("BMKG — Visualisasi Prakiraan Cuaca")
-st.caption("Sumber: API Publik BMKG · https://github.com/infoBMKG/data-cuaca")
+if st.sidebar.button("Ambil Data Wilayah"):
+    with st.spinner("Mengambil daftar wilayah..."):
+        try:
+            wilayah = get_wilayah(prov_code or None,
+                                  kab_code or None,
+                                  kec_code or None,
+                                  kel_code or None)
+            st.subheader("Daftar Wilayah")
+            st.write(pd.DataFrame(wilayah))
+        except Exception as e:
+            st.error(f"Gagal mengambil wilayah: {e}")
 
+if st.sidebar.button("Ambil Data Prakiraan"):
+    with st.spinner("Mengambil prakiraan cuaca..."):
+        try:
+            df = get_forecast(prov_code or None,
+                               kab_code or None,
+                               kec_code or None,
+                               kel_code or None)
+            if df.empty:
+                st.warning("Tidak ada data prakiraan.")
+            else:
+                st.subheader("Prakiraan Cuaca")
+                st.dataframe(df)
 
-with st.sidebar:
-    st.header("Kontrol")
-    adm4 = st.text_input("Kode wilayah (adm4)", value="31.71.03.1001")
-    btn = st.button("Ambil Data")
-
-
-if btn and adm4:
-    with st.spinner("Mengambil data..."):
-        data = get_prakiraan(adm4)
-
-    if not data:
-        st.error("Gagal pengambilan data. Pastikan kode adm4 valid atau cek koneksi.")
-    else:
-        lokasi = data.get('lokasi', {})
-        st.subheader(f"{lokasi.get('kota', '')} — {lokasi.get('kecamatan', '')}")
-
-        # DataFrame prakiraan
-        records = data.get('data', [])
-        df = pd.DataFrame(records)
-
-        col1, col2 = st.columns([1,2])
-        with col1:
-            st.metric("Cuaca sekarang", df.iloc[0].get('cuaca', '-'))
-            st.metric("Suhu (C)", df.iloc[0].get('tempC', '-'))
-            st.metric("Kelembapan (%)", df.iloc[0].get('humidity', '-'))
-
-        with col2:
-            st.plotly_chart(plot_time_series(df), use_container_width=True)
-
-        st.markdown("---")
-        st.subheader("Peta Lokasi")
-        st.pydeck_chart(make_map(df))
-
-        st.markdown("---")
-        st.subheader("Data mentah (JSON)")
-        st.json(data)
-
+                # Contoh visualisasi suhu
+                st.line_chart(df.pivot_table(index="waktu",
+                                             values="suhu",
+                                             aggfunc="mean"))
+        except Exception as e:
+            st.error(f"Gagal mengambil prakiraan: {e}")
