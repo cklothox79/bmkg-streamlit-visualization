@@ -1,11 +1,7 @@
 __pycache__/
 *.pyc
+.venv/
 .env
-.env.*
 /.streamlit/
 .DS_Store
-.vscode/
-
-
-# data
 data/*.json
