@@ -18,39 +18,33 @@ with st.sidebar:
 
 
 if btn and adm4:
-with st.spinner("Mengambil data..."):
-data = get_prakiraan(adm4)
+    with st.spinner("Mengambil data..."):
+        data = get_prakiraan(adm4)
 
+    if not data:
+        st.error("Gagal pengambilan data. Pastikan kode adm4 valid atau cek koneksi.")
+    else:
+        lokasi = data.get('lokasi', {})
+        st.subheader(f"{lokasi.get('kota', '')} — {lokasi.get('kecamatan', '')}")
 
-if not data:
-st.error("Gagal pengambilan data. Pastikan kode adm4 valid atau cek koneksi.")
-else:
-# Tampilkan ringkasan lokasi
-lokasi = data.get('lokasi', {})
-st.subheader(f"{lokasi.get('kota', '')} — {lokasi.get('kecamatan', '')}")
+        # DataFrame prakiraan
+        records = data.get('data', [])
+        df = pd.DataFrame(records)
 
+        col1, col2 = st.columns([1,2])
+        with col1:
+            st.metric("Cuaca sekarang", df.iloc[0].get('cuaca', '-'))
+            st.metric("Suhu (C)", df.iloc[0].get('tempC', '-'))
+            st.metric("Kelembapan (%)", df.iloc[0].get('humidity', '-'))
 
-# Data waktu cuaca ke DataFrame
-records = data.get('data', [])
-df = pd.DataFrame(records)
+        with col2:
+            st.plotly_chart(plot_time_series(df), use_container_width=True)
 
+        st.markdown("---")
+        st.subheader("Peta Lokasi")
+        st.pydeck_chart(make_map(df))
 
-col1, col2 = st.columns([1,2])
-with col1:
-st.metric("Cuaca sekarang", df.iloc[0].get('cuaca', '-'))
-st.metric("Suhu (C)", df.iloc[0].get('tempC', '-'))
-st.metric("Kelembapan (%)", df.iloc[0].get('humidity', '-'))
+        st.markdown("---")
+        st.subheader("Data mentah (JSON)")
+        st.json(data)
 
-
-with col2:
-st.plotly_chart(plot_time_series(df), use_container_width=True)
-
-
-st.markdown("---")
-st.subheader("Peta Lokasi")
-st.pydeck_chart(make_map(df))
-
-
-st.markdown("---")
-st.subheader("Data mentah (JSON)")
-st.json(data)
