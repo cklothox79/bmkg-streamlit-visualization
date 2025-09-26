@@ -1,30 +1,26 @@
 import requests
-import streamlit as st
+import pandas as pd
 
-# Endpoint dasar API BMKG
-BASE = "https://api.bmkg.go.id/publik/prakiraan-cuaca"
+BASE_URL = "https://api.bmkg.go.id/publik/prakiraan-cuaca"
 
 
-@st.cache_data(ttl=300)
-def get_prakiraan(adm4: str):
+def get_prakiraan(adm4: str) -> pd.DataFrame:
     """
-    Mengambil data prakiraan cuaca BMKG untuk kode wilayah tingkat IV (adm4).
+    Mengambil data prakiraan cuaca BMKG untuk wilayah adm4.
+    - adm4: kode administrasi (contoh: '35.15.06.1001')
 
-    Parameters
-    ----------
-    adm4 : str
-        Kode wilayah tingkat IV, contoh: "31.71.03.1001"
-
-    Returns
-    -------
-    dict | None
-        Data JSON hasil request, atau None jika gagal.
+    Return: DataFrame berisi jamCuaca, tempC, humidity, dsb.
     """
+    url = f"{BASE_URL}?adm4={adm4}"
+    r = requests.get(url, timeout=10)
+    r.raise_for_status()
+    data = r.json()
+
+    # BMKG biasanya punya struktur nested: ambil dengan hati-hati
     try:
-        params = {"adm4": adm4}
-        resp = requests.get(BASE, params=params, timeout=10)
-        resp.raise_for_status()
-        return resp.json()
-    except Exception as e:
-        st.error(f"Error saat mengambil data BMKG: {e}")
-        return None
+        cuaca_list = data["data"][0]["cuaca"]
+    except Exception:
+        raise ValueError("Format JSON BMKG berubah atau data tidak tersedia")
+
+    df = pd.DataFrame(cuaca_list)
+    return df
