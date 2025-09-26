@@ -12,9 +12,9 @@ st.caption("Sumber: API Publik BMKG · https://github.com/infoBMKG/data-cuaca")
 
 
 with st.sidebar:
-st.header("Kontrol")
-adm4 = st.text_input("Kode wilayah (adm4)", value="31.71.03.1001")
-btn = st.button("Ambil Data")
+    st.header("Kontrol")
+    adm4 = st.text_input("Kode wilayah (adm4)", value="31.71.03.1001")
+    btn = st.button("Ambil Data")
 
 
 if btn and adm4:
